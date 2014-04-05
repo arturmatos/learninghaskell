@@ -1,14 +1,14 @@
+import Data.Sequence
+import Data.Foldable
+
 data Suit = Hearts | Diamonds | Clubs | Spades deriving (Show, Eq)
 data Rank = RA | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 | R10 | RJ | RQ | RK deriving (Show, Enum, Eq)
 
 data Card = Card Rank Suit deriving (Show)
 
-data Foundation = Foundation [Card] [Card] [Card] [Card]  deriving (Show)
+data Stack = Foundation [Card] | Row [Card] deriving (Show)
 
-data Board = Board { foundation :: Foundation,
-                     rows :: ([Card], [Card], [Card], [Card], [Card], [Card], [Card], [Card])
-                   } deriving (Show)
-
+data Board = Board [Stack] deriving (Show)
 
 rank :: Card -> Rank
 rank (Card r _) = r
@@ -16,16 +16,23 @@ rank (Card r _) = r
 suit :: Card -> Suit
 suit (Card _ s) = s
 
-solvedBoard = 
-  let dia   = [ Card x Diamonds | x <- [RA .. RK]]
-      heart = [ Card x Hearts | x <- [RA .. RK]]
-      clubs = [ Card x Clubs | x <- [RA .. RK]]
-      spades= [ Card x Spades | x <- [RA .. RK]]
-  in 
-      Board {foundation = Foundation heart dia clubs spades,
-             rows = ([],[],[],[],[],[],[],[])
-            }
+cards :: Stack -> [Card]
+cards (Foundation lst) = lst
+cards (Row lst) = lst
 
+push :: Stack -> Card -> Stack
+push (Foundation cards) new = (Foundation (new:cards))
+push (Row cards) new = (Row (new:cards))
+
+pop :: Stack -> (Card, Stack)
+pop (Foundation (x:xs)) = (x, (Foundation xs))
+pop (Row (x:xs)) = (x, (Row xs))
+
+isLegalMove :: Stack -> Stack -> Bool
+isLegalMove (Row (x:_)) (Row xs) = isLegalMoveRow x xs
+isLegalMove (Row (x:_)) (Foundation xs) = isLegalMoveFoundation x xs
+isLegalMove (Foundation (x:_)) (Row xs) = isLegalMoveRow x xs
+isLegalMove _ _ = False
 
 isLegalMoveRow :: Card -> [Card] -> Bool
 isLegalMoveRow _ [] = True
@@ -38,9 +45,13 @@ isLegalMoveFoundation _ ((Card RK _):_) = False
 isLegalMoveFoundation (Card x s1) ((Card y s2):_) = x == succ y && s1 == s2
 isLegalMoveFoundation _ _ = False
 
-generateMoves :: Board -> [Board]
-generateMoves 
+
+-- move :: Board -> int -> int -> Board
+-- move (Board stackList) index1 index2 =
+--   let fromCards = cards stackList !! index1
+--       toCards = cards stackList !! index2
+--       elem:rem = fromCards
+--       added = elem:toCards      
+--   in (Board toList(update index2 added (update index1 rem (fromList stackList))))
 
 
-solve :: Board -> Maybe [Board]
-solve board = Just []
